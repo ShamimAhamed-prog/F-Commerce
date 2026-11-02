@@ -18,6 +18,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\Settings\CourierController;
 use App\Http\Controllers\Settings\StaffController;
 use App\Http\Controllers\Settings\WorkspaceSettingsController;
@@ -30,6 +31,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect()->route('dashboard'));
 Route::get('/health', HealthController::class)->withoutMiddleware('web')->name('health');
 Route::get('/offline', OfflineController::class)->name('offline');
+
+// cPanel-friendly maintenance (clear/optimize caches, migrate). 404 unless MAINTENANCE_KEY is set; see MaintenanceController.
+Route::get('/maintenance/{action}', MaintenanceController::class)->withoutMiddleware('web')->middleware('throttle:20,1')->name('maintenance');
 
 // Invitation links are opened by guests or signed-in users alike.
 Route::get('invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');

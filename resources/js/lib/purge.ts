@@ -16,7 +16,15 @@ export const DRAFT_PREFIX = 'fc:draft:';
 /** Non-personal UI preferences (install-banner cooldown, theme) survive purges. */
 export const UI_PREFIX = 'fc:ui:';
 
-export async function purgeClientData(opts: PurgeOptions = {}): Promise<void> {
+/**
+ * Never let cleanup block the user: some browsers stall on storage APIs (blocked IndexedDB deletes, private mode).
+ * Callers await this before navigating, so it is capped.
+ */
+export function purgeClientData(opts: PurgeOptions = {}): Promise<void> {
+    return Promise.race([purgeNow(opts), new Promise<void>((resolve) => setTimeout(resolve, 1500))]);
+}
+
+async function purgeNow(opts: PurgeOptions): Promise<void> {
     const tasks: Promise<unknown>[] = [];
 
     try {

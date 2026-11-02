@@ -24,6 +24,33 @@ location /build/ { add_header Cache-Control "public, max-age=31536000, immutable
 ```
 Apache: `public/.htaccess` already sets these headers.
 
+## cPanel / no terminal: web maintenance URLs
+When you cannot run `php artisan`, use the built-in maintenance route. It is **off by default** (always a plain 404).
+
+1. In the server's `.env` set a long random key (32+ characters), e.g. `MAINTENANCE_KEY=<random 40+ chars>`.
+   Generate one with any password generator. Do not reuse a password. If config is cached, run the first clear some other way
+   or delete `bootstrap/cache/config.php` in File Manager once.
+2. Open in your browser (replace `YOURKEY`):
+
+| URL | What it does |
+|-----|--------------|
+| `https://your-domain/maintenance/clear?key=YOURKEY` | Clears app cache, config, route, view and event caches |
+| `https://your-domain/maintenance/optimize?key=YOURKEY` | Clears, then rebuilds the config/route/view/event caches (faster production) |
+| `https://your-domain/maintenance/migrate?key=YOURKEY` | Runs pending database migrations (`--force`) |
+| `https://your-domain/maintenance/roles?key=YOURKEY` | Re-syncs the built-in roles and permissions |
+| `https://your-domain/maintenance/storage-link?key=YOURKEY` | Creates the `public/storage` link (may be blocked by some hosts) |
+
+3. The page answers with a short plain-text result (`OK` / `FAILED` per command).
+4. **When you are done, empty `MAINTENANCE_KEY` again** (or remove the line) so the URL is dead. Use `optimize` after every deploy and
+   after every `.env` change (config is cached, so `.env` edits only apply after `clear` or `optimize`).
+
+Safety: any mistake (no key, wrong key, unknown action) returns the same 404; five wrong keys lock the caller's IP out for 15 minutes;
+only the fixed commands above can run; the key is never echoed. The key travels in the URL, so it can appear in server logs and browser
+history: that is why the key should be temporary. You can send it as an `X-Maintenance-Key` header instead of `?key=` if you use a tool such as curl.
+
+cPanel notes: set the domain's document root to the project's `public/` folder, use PHP 8.2+, and upload `public/build` and `public/sw.js`
+(built with `npm run build` elsewhere). Make `storage/` and `bootstrap/cache/` writable.
+
 ## Storage, queue and image processing (Phase 1)
 - Uploads, derivatives and import files live on the private disk under `tenants/{id}/…` (`CATALOG_DISK`, `IMPORT_DISK`).
   Back this directory up; it is part of tenant data. Nothing under it is web-accessible; images are served by `/app/media/{id}/{size}`.
