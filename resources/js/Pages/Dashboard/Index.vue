@@ -82,7 +82,7 @@ const allClear = computed(() => attentionItems.value.every((i) => !i.n));
 </script>
 
 <template>
-    <div class="mx-auto max-w-[88rem] space-y-6">
+    <div class="w-full space-y-6">
         <!-- Header -->
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -105,13 +105,13 @@ const allClear = computed(() => attentionItems.value.every((i) => !i.n));
         </div>
 
         <!-- KPI cards: only those the user may see (profit and finance are permissioned) -->
-        <div class="grid grid-cols-2 gap-3 sm:gap-4" :class="kpiCards.length > 4 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'">
+        <div class="grid grid-cols-2 gap-3 sm:gap-4" :class="kpiCards.length > 4 ? 'md:grid-cols-3 2xl:grid-cols-6' : 'md:grid-cols-4'">
             <StatCard v-for="c in kpiCards" :key="c.key" v-bind="c" />
         </div>
 
         <!-- Trend + pipeline -->
-        <div class="grid gap-4 xl:grid-cols-3">
-            <section class="card min-w-0 p-5 xl:col-span-2">
+        <div class="grid gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+            <section class="card min-w-0 p-5 xl:col-span-2 2xl:col-span-3">
                 <div class="mb-4 flex items-center justify-between"><h2 class="font-semibold">{{ t('dash.salesTrend') }}</h2><span class="text-xs text-muted">{{ fmtDay(from) }} – {{ fmtDay(to) }}</span></div>
                 <AreaChart v-if="kpis.orders" :points="points" :format="(n) => formatBdt(n.toFixed(2))" :aria-label="t('dash.salesTrend')" />
                 <div v-else class="grid h-60 place-items-center text-center text-sm text-muted"><div><NavIcon name="chart" :size="28" class="mx-auto mb-2 opacity-60" />{{ t('dash.noOrders') }}</div></div>
@@ -159,7 +159,7 @@ const allClear = computed(() => attentionItems.value.every((i) => !i.n));
         </div>
 
         <!-- Top sellers + recent orders -->
-        <div class="grid gap-4 xl:grid-cols-2">
+        <div class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
             <section class="card min-w-0 p-5">
                 <h2 class="mb-3 font-semibold">{{ t('dash.topSellers') }}</h2>
                 <ul v-if="top_sellers.length" class="space-y-3">

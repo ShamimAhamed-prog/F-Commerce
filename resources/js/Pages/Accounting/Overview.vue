@@ -20,7 +20,7 @@ const typeIcon: Record<string, string> = { cash: 'coins', bank: 'building', mfs:
 </script>
 
 <template>
-    <div class="mx-auto max-w-[88rem]">
+    <div class="w-full">
         <div class="mb-5 flex flex-wrap items-end justify-between gap-3"><div><p class="eyebrow">{{ t('acct.title') }}</p><h1 class="page-title mt-1">{{ t('acct.overview') }}</h1></div>
             <StatusBadge :tone="locked_through ? 'warn' : 'ok'"><NavIcon :name="locked_through ? 'lock' : 'shield'" :size="12" class="mr-1 inline" />{{ locked_through ? t('acct.locked', { d: locked_through }) : t('acct.open') }}</StatusBadge></div>
         <AccountingNav />
