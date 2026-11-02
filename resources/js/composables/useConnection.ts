@@ -1,4 +1,5 @@
 import { computed, readonly, ref } from 'vue';
+import { withBase } from '@/lib/base';
 
 /**
  * Connection state machine (OFF-1..OFF-5).
@@ -20,7 +21,7 @@ export interface ConnectionOptions {
 
 export function createConnection(opts: ConnectionOptions = {}) {
     const fetchFn = opts.fetchFn ?? ((...a: Parameters<typeof fetch>) => fetch(...a));
-    const probeUrl = opts.probeUrl ?? '/health';
+    const probeUrl = opts.probeUrl ?? withBase('/health');
     const base = opts.baseIntervalMs ?? 20_000;
     const max = opts.maxIntervalMs ?? 120_000;
     const timeoutMs = opts.timeoutMs ?? 6_000;

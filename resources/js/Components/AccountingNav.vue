@@ -2,6 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { stripBase } from '@/lib/base';
 import { usePermissions } from '@/composables/usePermissions';
 
 const { t } = useI18n();
@@ -17,7 +18,7 @@ const tabs = computed(() => [
     { k: 'accounts', href: '/app/accounting/accounts', ok: true },
     { k: 'reports', href: can('profit.view') ? '/app/reports/profit-loss' : '/app/reports/trial-balance', ok: can('reports.view'), prefix: '/app/reports' },
 ].filter((x) => x.ok));
-const on = (x: any) => { const p = page.url.split('?')[0]; return x.exact ? p === x.href : x.prefix ? p.startsWith(x.prefix) : p.startsWith(x.href); };
+const on = (x: any) => { const p = stripBase(page.url.split('?')[0]); return x.exact ? p === x.href : x.prefix ? p.startsWith(x.prefix) : p.startsWith(x.href); };
 </script>
 
 <template>

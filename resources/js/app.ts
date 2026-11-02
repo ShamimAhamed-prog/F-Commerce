@@ -1,8 +1,9 @@
 import '../css/app.css';
-import { createInertiaApp, router } from '@inertiajs/vue3';
+import { createInertiaApp, http, router } from '@inertiajs/vue3';
 import { createApp, h } from 'vue';
 import { i18n } from './i18n';
 import { useConnection } from './composables/useConnection';
+import { installAnchorRewriter, withBase, withBaseUrl } from './lib/base';
 import { purgeClientData } from './lib/purge';
 import { registerServiceWorker } from './composables/useServiceWorkerUpdate';
 
@@ -24,6 +25,10 @@ createInertiaApp({
     },
 });
 
+// Sub-folder deploys: every Inertia request (Link, router.*, forms) gets the base path; no-op at the domain root.
+http.onRequest((config: any) => ({ ...config, url: withBaseUrl(config.url) }));
+installAnchorRewriter();
+
 const connection = useConnection();
 connection.start();
 
@@ -36,7 +41,7 @@ router.on('httpException', (event) => {
     const status = (event.detail as any)?.response?.status;
     if (status === 401 || status === 419) {
         event.preventDefault();
-        void purgeClientData({ keepDrafts: true }).finally(() => window.location.assign('/auth/login'));
+        void purgeClientData({ keepDrafts: true }).finally(() => window.location.assign(withBase('/auth/login')));
     } else if (status >= 500) {
         void connection.reportFailure();
     }

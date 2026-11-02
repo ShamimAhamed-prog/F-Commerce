@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue';
+import { BASE } from '@/lib/base';
 import { isBusy } from './useBusy';
 
 /**
@@ -17,7 +18,7 @@ export async function registerServiceWorker(): Promise<void> {
     registered = true;
 
     const { Workbox } = await import('workbox-window');
-    wb = new Workbox('/sw.js', { scope: '/' });
+    wb = new Workbox(`${BASE}/sw.js`, { scope: `${BASE}/` });
 
     wb.addEventListener('waiting', () => (updateAvailable.value = true));
     wb.addEventListener('controlling', (e) => {

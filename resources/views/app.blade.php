@@ -9,9 +9,10 @@
     <title inertia>{{ config('app.name') }}</title>
 
     {{-- PWA-6: manifest on every layout, incl. auth pages --}}
-    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="manifest" href="{{ config('deployment.base_path') }}/manifest.webmanifest">
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f5fb">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0f1f">
+    <meta name="app-base" content="{{ config('deployment.base_path') }}">
     <meta name="csp-nonce" content="{{ Vite::cspNonce() }}">
     <meta name="color-scheme" content="light dark">
 
@@ -20,8 +21,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="{{ config('app.name') }}">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="{{ config('deployment.base_path') }}/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ config('deployment.base_path') }}/icons/favicon-32.png">
 
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
     @inertiaHead

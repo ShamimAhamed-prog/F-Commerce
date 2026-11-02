@@ -14,7 +14,9 @@ import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
 
-const OFFLINE_URL = '/offline.html';
+// Sub-folder deploys: the SW is registered with scope `${BASE}/`, so the base is simply its own scope path.
+const BASE = new URL(self.registration.scope).pathname.replace(/\/+$/, '');
+const OFFLINE_URL = `${BASE}/offline.html`;
 
 // Build assets (injected) — immutable, versioned by hash.
 precacheAndRoute(self.__WB_MANIFEST);
@@ -22,7 +24,7 @@ cleanupOutdatedCaches();
 
 // Static icons: cache-first with expiration (public, tenant-agnostic).
 registerRoute(
-    ({ url, request }) => request.method === 'GET' && url.origin === self.location.origin && url.pathname.startsWith('/icons/'),
+    ({ url, request }) => request.method === 'GET' && url.origin === self.location.origin && url.pathname.startsWith(`${BASE}/icons/`),
     new CacheFirst({
         cacheName: 'static-icons-v1',
         plugins: [new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 30 * 24 * 3600 })],
@@ -33,7 +35,7 @@ registerRoute(
 // without becoming an offline data store. Detail-size images are never cached. Capped, and purged on
 // logout / tenant switch / session expiry via PURGE_CACHES (cache name does not start with workbox-precache).
 registerRoute(
-    ({ url, request }) => request.method === 'GET' && url.origin === self.location.origin && /^\/app\/media\/\d+\/(thumb|card)$/.test(url.pathname),
+    ({ url, request }) => request.method === 'GET' && url.origin === self.location.origin && /^\/app\/media\/\d+\/(thumb|card)$/.test(url.pathname.slice(BASE.length)),
     new StaleWhileRevalidate({
         cacheName: 'product-thumbs-v1',
         plugins: [
@@ -52,7 +54,10 @@ registerRoute(
             return await fetch(request);
         } catch {
             const offline = await matchPrecache(OFFLINE_URL);
-            return offline ?? Response.error();
+            if (!offline) return Response.error();
+            // The page is shown for ANY failed navigation, so its relative links must resolve against the app root.
+            const html = (await offline.text()).replace('<head>', `<head><base href="${BASE}/">`);
+            return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         }
     },
 );

@@ -1,3 +1,5 @@
+import { stripBase } from '@/lib/base';
+
 /** Navigation registry. Only live routes are listed; entries are hidden per permission. */
 export interface NavItem {
     key: string; // i18n key under nav.*
@@ -41,7 +43,7 @@ export const MORE_TAB = { key: 'more', href: '/app/more', icon: 'more' as const,
 
 /** Active-state matcher. `match` may end in `$` for an exact path. */
 export function isActive(item: { href: string; match?: string }, url: string): boolean {
-    const path = url.split('?')[0];
+    const path = stripBase(url.split('?')[0]);
     const m = item.match ?? item.href;
     if (m.endsWith('$')) return path === m.slice(0, -1);
     // Sibling items under a shared prefix (e.g. /app/accounting vs /app/accounting/expenses) must not both light up.

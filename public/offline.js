@@ -1,1 +1,1 @@
-document.getElementById('retry').addEventListener('click', function () { location.href = '/app/dashboard'; });
+document.getElementById('retry').addEventListener('click', function () { location.href = 'app/dashboard'; });

@@ -30,6 +30,7 @@ use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
+Route::get('/manifest.webmanifest', \App\Http\Controllers\ManifestController::class)->withoutMiddleware('web')->name('manifest');
 Route::get('/health', HealthController::class)->withoutMiddleware('web')->name('health');
 Route::get('/offline', OfflineController::class)->name('offline');
 

@@ -94,3 +94,28 @@ Then ship a fixed build; the next normal `npm run build` regenerates `sw.js`. Re
 - E2E (`npm run test:e2e`) uses `.env.e2e` (throwaway key, own SQLite file) and `php artisan serve`.
   Run `npm run build` first. WebKit projects need `npx playwright install --with-deps webkit`.
 - Tests: `php artisan test`, `npm test`, `npm run typecheck`, `npm run lint:sw`.
+
+## Deploying in a sub-folder (e.g. https://www.sheracart.com/fcom-manager)
+
+One value controls it: `APP_BASE_PATH`.
+
+| | local / own domain | cPanel sub-folder |
+|---|---|---|
+| `.env` | `APP_BASE_PATH=` | `APP_BASE_PATH=/fcom-manager` and `APP_URL=https://www.sheracart.com/fcom-manager` |
+
+What reads it: `config/deployment.php` (Blade + the generated `/manifest.webmanifest`), `vite.config.ts` (asset base and the
+service-worker precache list, read at **build** time), and the browser (`<meta name="app-base">`, used by Inertia requests,
+`/health`, the service-worker registration and scope). The service worker derives the base from its own scope.
+
+Steps (no Node on the server):
+1. Locally set `APP_BASE_PATH=/fcom-manager` in `.env`, then `npm run build`. The base is baked into `public/build` and `public/sw.js`,
+   so a build made for one folder is wrong for another: rebuild when the folder changes.
+2. Upload the app (split layout):
+   - **Everything except `public/`** -> `/home/sheracar/Fcom-manager/` (app, vendor, bootstrap, config, storage, `.env` ...).
+   - **Contents of `public/`** (`build/`, `icons/`, `sw.js`, `offline.*`, `favicon.ico`, `robots.txt`, `.htaccess`) -> `/home/sheracar/public_html/fcom-manager/`.
+   - **`cpanel/index.php`** -> `/home/sheracar/public_html/fcom-manager/index.php` (replaces `public/index.php`; it points at the app folder
+     and calls `usePublicPath` so Laravel finds `build/` and `offline.html` next to it).
+   - Make `storage/` and `bootstrap/cache/` writable (755/775). Then `/fcom-manager/maintenance/storage-link?key=...` once.
+3. On the server `.env`: `APP_BASE_PATH=/fcom-manager`, `APP_URL=...`, `APP_ENV=production`, `APP_DEBUG=false`; then open
+   `/fcom-manager/maintenance/clear?key=...` to drop the config cache.
+4. Users who installed the PWA from another URL must reinstall it (the manifest `id`/`scope` changed) and clear the old site data.

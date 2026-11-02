@@ -1,11 +1,19 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, loadEnv } from 'vite';
+import type { UserConfig } from 'vitest/config';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath } from 'node:url';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+/** Same APP_BASE_PATH the PHP side reads (config/deployment.php): '' or '/fcom-manager'. */
+const normalise = (v: string) => { const t = (v ?? '').trim().replace(/^\/+|\/+$/g, ''); return t ? `/${t}` : ''; };
+
+export default defineConfig(({ mode }) => {
+const BASE = normalise(loadEnv(mode, process.cwd(), '').APP_BASE_PATH);
+return {
+    // Built chunks/CSS reference each other with absolute URLs, so they must carry the sub-folder.
+    base: mode === 'production' ? `${BASE}/build/` : undefined,
     plugins: [
         laravel({ input: ['resources/css/app.css', 'resources/js/app.ts'], refresh: true }),
         vue({ template: { transformAssetUrls: { base: null, includeAbsolute: false } } }),
@@ -24,8 +32,8 @@ export default defineConfig({
                 // Only the compiled app shell; no HTML (it is server-rendered per user).
                 globDirectory: 'public/build',
                 globPatterns: ['assets/**/*.{js,css,woff2}'],
-                modifyURLPrefix: { '': '/build/' },
-                additionalManifestEntries: ['/offline.html', '/offline.css', '/offline.js'].map((url) => ({ url, revision: String(Date.now()) })),
+                modifyURLPrefix: { '': `${BASE}/build/` },
+                additionalManifestEntries: ['/offline.html', '/offline.css', '/offline.js'].map((path) => ({ url: BASE + path, revision: String(Date.now()) })),
                 maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
             },
             devOptions: { enabled: false },
@@ -38,4 +46,5 @@ export default defineConfig({
         include: ['resources/js/**/*.test.ts'],
         globals: true,
     },
+} as UserConfig;
 });
