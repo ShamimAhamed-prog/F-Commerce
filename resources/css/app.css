@@ -1,0 +1,242 @@
+@import 'tailwindcss';
+
+@source '../**/*.vue';
+@source '../**/*.ts';
+
+/* ------------------------------------------------------------------ design tokens
+   Light and dark palettes share names; components only use the semantic tokens.
+   Dark applies when the OS prefers it (unless the user forced light) or when forced via data-theme. */
+:root {
+    --c-surface: #f3f5fb;
+    --c-surface-2: #eaeef8;
+    --c-card: #ffffff;
+    --c-ink: #0f172a;
+    --c-muted: #5b6b85;
+    --c-line: #e3e8f2;
+    --c-brand: #5b5bf0;
+    --c-brand-2: #8b5cf6;
+    --c-brand-soft: rgba(91, 91, 240, 0.1);
+    --c-brand-ink: #ffffff;
+    --c-ok: #047857;
+    --c-warn: #b45309;
+    --c-danger: #b91c1c;
+    --c-info: #0369a1;
+    --grad-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.05);
+    --shadow-pop: 0 10px 40px rgba(15, 23, 42, 0.16);
+    --glass: rgba(255, 255, 255, 0.78);
+    --chart-1: #6366f1;
+    --chart-2: #10b981;
+    --chart-3: #f59e0b;
+    --chart-4: #ef4444;
+    --chart-5: #06b6d4;
+    --chart-grid: #e8ecf5;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --tabbar-h: 3.75rem;
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+        --c-surface: #0a0f1f;
+        --c-surface-2: #0e1530;
+        --c-card: #121a30;
+        --c-ink: #e7ecf7;
+        --c-muted: #93a1bc;
+        --c-line: #1f2a47;
+        --c-brand: #8b8cf8;
+        --c-brand-2: #a78bfa;
+        --c-brand-soft: rgba(139, 140, 248, 0.14);
+        --c-ok: #34d399;
+        --c-warn: #fbbf24;
+        --c-danger: #f87171;
+        --c-info: #38bdf8;
+        --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+        --shadow-pop: 0 14px 48px rgba(0, 0, 0, 0.55);
+        --glass: rgba(18, 26, 48, 0.78);
+        --chart-grid: #1c2742;
+        color-scheme: dark;
+    }
+}
+
+:root[data-theme='dark'] {
+    --c-surface: #0a0f1f;
+    --c-surface-2: #0e1530;
+    --c-card: #121a30;
+    --c-ink: #e7ecf7;
+    --c-muted: #93a1bc;
+    --c-line: #1f2a47;
+    --c-brand: #8b8cf8;
+    --c-brand-2: #a78bfa;
+    --c-brand-soft: rgba(139, 140, 248, 0.14);
+    --c-ok: #34d399;
+    --c-warn: #fbbf24;
+    --c-danger: #f87171;
+    --c-info: #38bdf8;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+    --shadow-pop: 0 14px 48px rgba(0, 0, 0, 0.55);
+    --glass: rgba(18, 26, 48, 0.78);
+    --chart-grid: #1c2742;
+    color-scheme: dark;
+}
+
+@theme inline {
+    --color-surface: var(--c-surface);
+    --color-surface-2: var(--c-surface-2);
+    --color-card: var(--c-card);
+    --color-ink: var(--c-ink);
+    --color-muted: var(--c-muted);
+    --color-line: var(--c-line);
+    --color-brand: var(--c-brand);
+    --color-brand-2: var(--c-brand-2);
+    --color-brand-soft: var(--c-brand-soft);
+    --color-brand-ink: var(--c-brand-ink);
+    --color-ok: var(--c-ok);
+    --color-warn: var(--c-warn);
+    --color-danger: var(--c-danger);
+    --color-info: var(--c-info);
+    --radius-xl: 1rem;
+    --radius-2xl: 1.25rem;
+    /* UI-13: Bangla-capable system stacks, no external font requests (CSP). */
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans Bengali', 'Kalpurush', 'Nirmala UI', sans-serif;
+}
+
+html {
+    font-size: 16px; /* UI-13: scales with OS font size */
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    min-height: 100dvh; /* UI-4 */
+    line-height: 1.6; /* leaves room for Bangla conjuncts */
+    background:
+        radial-gradient(60rem 30rem at 85% -10%, var(--c-brand-soft), transparent 60%),
+        radial-gradient(40rem 24rem at -10% 10%, rgba(16, 185, 129, 0.06), transparent 60%),
+        var(--c-surface);
+    background-attachment: fixed;
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+}
+
+/* UI-6: avoid iOS zoom-on-focus */
+input, select, textarea {
+    font-size: 16px;
+}
+
+::selection {
+    background: var(--c-brand-soft);
+}
+
+:focus-visible {
+    outline: 2px solid var(--c-brand);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) { /* UI-15 */
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Every existing "card" (rounded-xl + border + bg-card) gets the refined surface treatment. */
+.rounded-xl.border.bg-card,
+.rounded-2xl.border.bg-card {
+    box-shadow: var(--shadow-card);
+    border-color: var(--c-line);
+}
+
+dialog::backdrop {
+    backdrop-filter: blur(4px);
+}
+
+progress {
+    accent-color: var(--c-brand);
+}
+
+table {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ primitives */
+@utility touch-target {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+@utility tabular {
+    font-variant-numeric: tabular-nums;
+}
+
+@utility glass {
+    background: var(--glass);
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+}
+
+@utility btn {
+    @apply inline-flex touch-target items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition duration-150 select-none;
+}
+
+@utility btn-primary {
+    @apply btn text-brand-ink disabled:cursor-not-allowed disabled:opacity-50;
+    background-image: var(--grad-brand);
+    box-shadow: 0 6px 18px -6px rgba(99, 102, 241, 0.65);
+}
+.btn-primary:hover:not(:disabled) {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+@utility btn-secondary {
+    @apply btn border border-line bg-card text-ink hover:border-brand/50 hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-ghost {
+    @apply btn text-muted hover:bg-brand-soft hover:text-ink;
+}
+
+@utility field {
+    @apply block w-full touch-target rounded-xl border border-line bg-card px-3.5 py-2 text-ink placeholder:text-muted/70 transition;
+}
+.field:focus {
+    border-color: var(--c-brand);
+    box-shadow: 0 0 0 3px var(--c-brand-soft);
+    outline: none;
+}
+
+@utility label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+}
+
+@utility err {
+    @apply mt-1 text-sm text-danger;
+}
+
+@utility link-action {
+    @apply inline-flex min-h-[44px] items-center px-1 text-sm font-medium text-brand hover:underline;
+}
+
+@utility card {
+    @apply rounded-2xl border border-line bg-card;
+    box-shadow: var(--shadow-card);
+}
+
+@utility page-title {
+    @apply text-2xl font-bold tracking-tight;
+}
+
+@utility eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted;
+}
+
+@keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+.rise { animation: rise 0.35s ease both; }
