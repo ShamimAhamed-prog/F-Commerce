@@ -19,6 +19,7 @@ function move(to: string) {
 }
 const page = usePage();
 const courierError = computed(() => (page.props.errors as Record<string, string>)?.courier);
+const statusError = computed(() => (page.props.errors as Record<string, string>)?.status);
 const sending = ref(false);
 const uncertain = ref(false);
 let off: (() => void) | null = null;
@@ -86,6 +87,7 @@ function send(provider: string, label: string) {
             <p v-if="shipments.some((x: any) => x.provider_status === 'delivered')" class="text-xs text-muted">{{ t('ship.codReminder') }}</p>
         </section>
 
+        <p v-if="statusError" class="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm" role="alert" data-testid="status-error">{{ statusError }}</p>
         <div v-if="actions.length" class="flex flex-wrap gap-2">
             <OfflineGuard v-for="a in actions" :key="a" :button-class="a === 'cancelled' ? 'btn-secondary !text-danger' : a === actions[0] ? 'btn-primary' : 'btn-secondary'" :data-status="a" @click="move(a)">{{ t(`orders.move_${a}`) }}</OfflineGuard>
         </div>
