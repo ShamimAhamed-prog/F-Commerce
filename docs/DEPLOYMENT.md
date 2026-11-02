@@ -51,6 +51,11 @@ history: that is why the key should be temporary. You can send it as an `X-Maint
 cPanel notes: set the domain's document root to the project's `public/` folder, use PHP 8.2+, and upload `public/build` and `public/sw.js`
 (built with `npm run build` elsewhere). Make `storage/` and `bootstrap/cache/` writable.
 
+## Courier status sync
+Parcels are checked every 15 minutes by `php artisan fc:courier-sync`, which runs from the Laravel scheduler, so the cron entry
+`* * * * * php artisan schedule:run` (see below) must exist. No cron on your host? Call `/maintenance/courier-sync?key=YOURKEY`
+from any free uptime/cron-job service every 15 minutes (see "cPanel / no terminal"). Users can always press "Refresh status" on a shipment.
+
 ## Storage, queue and image processing (Phase 1)
 - Uploads, derivatives and import files live on the private disk under `tenants/{id}/…` (`CATALOG_DISK`, `IMPORT_DISK`).
   Back this directory up; it is part of tenant data. Nothing under it is web-accessible; images are served by `/app/media/{id}/{size}`.

@@ -28,6 +28,7 @@ class MaintenanceController extends Controller
         'migrate' => ['migrate' => ['--force' => true]],
         'roles' => ['fc:sync-roles' => []],
         'storage-link' => ['storage:link' => []],
+        'courier-sync' => ['fc:courier-sync' => []],                           // for hosts without cron: call this URL on a schedule
     ];
 
     public function __invoke(Request $request, string $action): Response

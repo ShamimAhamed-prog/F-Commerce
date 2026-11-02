@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Sales;
 use App\Domain\Sales\OrderService;
 use App\Domain\Tenancy\CurrentTenant;
 use App\Http\Controllers\Controller;
+use App\Models\CourierIntegration;
 use App\Models\Order;
+use App\Models\Shipment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -99,8 +101,17 @@ class OrderController extends Controller
         $order->load(['items', 'histories', 'customer:id,name,phone']);
         $next = OrderService::TRANSITIONS[$order->status] ?? [];
 
+        $shipments = Shipment::with('events')->where('order_id', $order->id)->orderByDesc('id')->get();
+        $integrations = Gate::allows('shipments.manage') ? CourierIntegration::where('status', 'connected')->get(['provider', 'display_name']) : collect();
+
         return Inertia::render('Orders/Show', [
             'order' => $order->toArray(),
+            'shipments' => $shipments
+                ->map(fn ($s) => ShipmentController::present($s) + ['events' => $s->events->map(fn ($e) => ['status' => $e->status, 'note' => $e->note, 'at' => $e->created_at])->reverse()->values()]),
+            'couriers' => $integrations->map(fn ($i) => ['provider' => $i->provider, 'label' => config("couriers.{$i->provider}.label", $i->display_name)])->values(),
+            'canManageShipments' => Gate::allows('shipments.manage'),
+            'canShip' => Gate::allows('shipments.manage') && in_array($order->status, \App\Domain\Shipping\ShipmentService::BOOKABLE, true) && ! $shipments->contains(fn ($s) => $s->isActive()),
+            'courierSetupUrl' => Gate::allows('integrations.manage') ? '/app/settings/couriers' : null,
             'actions' => array_values(array_filter($next, fn ($s) => Gate::allows($s === 'cancelled' ? 'orders.cancel' : 'orders.update'))),
         ]);
     }

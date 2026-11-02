@@ -52,7 +52,7 @@ it('locks the caller out after repeated wrong keys, even for the right key', fun
 });
 
 it('only exposes a fixed set of commands and passes nothing from the request to Artisan', function () {
-    expect(array_keys(MaintenanceController::ACTIONS))->toBe(['clear', 'optimize', 'migrate', 'roles', 'storage-link']);
+    expect(array_keys(MaintenanceController::ACTIONS))->toBe(['clear', 'optimize', 'migrate', 'roles', 'storage-link', 'courier-sync']);
     expect(MaintenanceController::ACTIONS['optimize'])->toBe(['optimize:clear' => [], 'optimize' => []]);
     expect(MaintenanceController::ACTIONS['migrate'])->toBe(['migrate' => ['--force' => true]]);
     $src = file_get_contents(app_path('Http/Controllers/MaintenanceController.php'));

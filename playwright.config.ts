@@ -17,11 +17,15 @@ export default defineConfig({
         { name: 'iphone', use: { ...devices['iPhone 14'] } },
         { name: 'ipad', use: { ...devices['iPad (gen 7)'] } },
     ],
-    webServer: {
-        // Production-like: strict CSP, compiled assets, own SQLite file.
-        command: `php artisan serve --env=e2e --host=127.0.0.1 --port=${PORT}`,
-        url: `http://127.0.0.1:${PORT}/health`,
-        reuseExistingServer: false,
-        env: { PHP_CLI_SERVER_WORKERS: '4' },
-    },
+    webServer: [
+        // Stand-in for the courier API so booking can be tested end to end without real parcels.
+        { command: 'node tests/e2e/fake-steadfast.mjs', url: 'http://127.0.0.1:8130/api/v1/ping', reuseExistingServer: false },
+        {
+            // Production-like: strict CSP, compiled assets, own SQLite file.
+            command: `php artisan serve --env=e2e --host=127.0.0.1 --port=${PORT}`,
+            url: `http://127.0.0.1:${PORT}/health`,
+            reuseExistingServer: false,
+            env: { PHP_CLI_SERVER_WORKERS: '4' },
+        },
+    ],
 });

@@ -150,6 +150,16 @@ export default {
     },
     customers: { title: 'Customers', orders: 'Orders', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'Returned', lifetime: 'Lifetime sales', altPhone: 'Alternate phone', noCustomers: 'No customers yet.', saved: 'Saved' },
     more: { title: 'More' },
+    ship: {
+        title: 'Courier', sendTo: 'Send to {courier}', sending: 'Sending…', confirmSend: 'Send this parcel to {courier}? COD to collect: {cod}. This books a real parcel.', tracking: 'Tracking code', consignment: 'Consignment',
+        copy: 'Copy', copied: 'Copied', refresh: 'Refresh status', check: 'Check status', lastSynced: 'Last checked', booked: 'Booked', failed: 'Not sent', unknown: 'Needs checking', booking: 'Sending',
+        provider_status: 'Courier status', history: 'Tracking history', notConnected: 'No courier account is connected yet.', connectLink: 'Connect a courier', cannotShipNow: 'Confirm the order before sending it to a courier.',
+        unknownHelp: 'We could not confirm whether the courier received this parcel. Do NOT send it again. Use “Check status” to find out.', uncertainTitle: 'We could not confirm this booking',
+        uncertainBody: 'Do not send it again yet. Refresh the page to see its real state, then use “Check status” if it shows “Needs checking”.', noShipments: 'No shipments yet.', searchPlaceholder: 'Search invoice, tracking or consignment', all: 'All',
+        s_pending: 'Pending', s_in_review: 'In review', s_hold: 'On hold', s_delivered: 'Delivered', s_partial_delivered: 'Partly delivered', s_cancelled: 'Cancelled', s_exceptional: 'Exception', s_unknown: 'Unknown',
+        s_delivered_approval_pending: 'Delivered (awaiting confirmation)', s_partial_delivered_approval_pending: 'Part delivered (awaiting confirmation)', s_cancelled_approval_pending: 'Cancelled (awaiting confirmation)', s_unknown_approval_pending: 'Awaiting confirmation',
+        codReminder: 'Delivered is not paid: record the COD remittance under Accounting → COD.',
+    },
     couriers: {
         title: 'Courier accounts', help: 'Connect your own merchant account. Keys are stored encrypted and are never shown again.', connect: 'Save & test connection',
         retest: 'Test connection', disconnect: 'Disconnect', notConnected: 'Not connected', status_connected: 'Connected', status_failed: 'Connection failed',

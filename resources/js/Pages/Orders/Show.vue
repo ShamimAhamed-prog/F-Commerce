@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ShipmentCard from '@/Components/ShipmentCard.vue';
+import NavIcon from '@/Components/NavIcon.vue';
 import OfflineGuard from '@/Components/OfflineGuard.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import { formatBdt } from '@/composables/useCurrency';
@@ -8,13 +11,28 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { telHref, waHref } from '@/lib/phone';
 
 defineOptions({ layout: AppLayout });
-const props = defineProps<{ order: any; actions: string[] }>();
+const props = defineProps<{ order: any; actions: string[]; shipments: any[]; couriers: { provider: string; label: string }[]; canShip: boolean; canManageShipments: boolean; courierSetupUrl: string | null }>();
 const { t } = useI18n();
 function move(to: string) {
     if (to === 'cancelled' && !window.confirm(t('orders.cancelConfirm'))) return;
     router.post(`/app/orders/${props.order.id}/status`, { status: to }, { preserveScroll: true });
 }
-const row = (label: string, v: string) => ({ label, v });
+const page = usePage();
+const courierError = computed(() => (page.props.errors as Record<string, string>)?.courier);
+const sending = ref(false);
+const uncertain = ref(false);
+let off: (() => void) | null = null;
+onBeforeUnmount(() => off?.());
+
+/** Booking is online-only and never auto-retried. If the connection drops mid-request, the result is UNCERTAIN: we say so
+ *  and tell the user not to click again; the server-side in-flight lock protects against a duplicate either way. */
+function send(provider: string, label: string) {
+    if (sending.value || !window.confirm(t('ship.confirmSend', { courier: label, cod: formatBdt(props.order.cod_amount) }))) return;
+    sending.value = true;
+    uncertain.value = false;
+    off = router.on('networkError', () => (uncertain.value = true));
+    router.post(`/app/orders/${props.order.id}/ship`, { provider }, { preserveScroll: true, onFinish: () => { sending.value = false; off?.(); off = null; } });
+}
 </script>
 
 <template>
@@ -48,6 +66,24 @@ const row = (label: string, v: string) => ({ label, v });
                 <div class="flex justify-between"><dt>{{ t('orders.advance') }}</dt><dd>{{ formatBdt(order.advance) }}</dd></div>
                 <div class="flex justify-between font-bold"><dt>{{ t('orders.cod') }}</dt><dd data-testid="cod">{{ formatBdt(order.cod_amount) }}</dd></div>
             </dl>
+        </section>
+
+        <!-- Courier -->
+        <section class="card space-y-4 p-4 sm:p-5" data-testid="courier-section">
+            <h2 class="font-semibold">{{ t('ship.title') }}</h2>
+            <p v-if="courierError" class="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm" role="alert" data-testid="courier-error">{{ courierError }}</p>
+            <div v-if="uncertain" class="rounded-xl border border-warn bg-warn/10 p-3 text-sm" role="alert" data-testid="ship-uncertain"><p class="font-semibold">{{ t('ship.uncertainTitle') }}</p><p class="mt-1">{{ t('ship.uncertainBody') }}</p></div>
+
+            <ShipmentCard v-for="sh in shipments" :key="sh.id" :shipment="sh" :can-manage="canManageShipments" />
+
+            <template v-if="canShip">
+                <div v-if="couriers.length" class="flex flex-wrap gap-2">
+                    <OfflineGuard v-for="c in couriers" :key="c.provider" :pending="sending" button-class="btn-primary" :data-courier="c.provider" @click="send(c.provider, c.label)"><NavIcon name="truck" :size="16" /> {{ sending ? t('ship.sending') : t('ship.sendTo', { courier: c.label }) }}</OfflineGuard>
+                </div>
+                <p v-else class="text-sm text-muted">{{ t('ship.notConnected') }} <Link v-if="courierSetupUrl" :href="courierSetupUrl" class="link-action">{{ t('ship.connectLink') }}</Link></p>
+            </template>
+            <p v-else-if="!shipments.length" class="text-sm text-muted">{{ t('ship.cannotShipNow') }}</p>
+            <p v-if="shipments.some((x: any) => x.provider_status === 'delivered')" class="text-xs text-muted">{{ t('ship.codReminder') }}</p>
         </section>
 
         <div v-if="actions.length" class="flex flex-wrap gap-2">

@@ -12,6 +12,7 @@ export interface NavItem {
 export const NAV: NavItem[] = [
     { key: 'dashboard', href: '/app/dashboard', icon: 'home', group: 'overview', permission: 'dashboard.view', tab: true },
     { key: 'orders', href: '/app/orders', icon: 'receipt', group: 'sales', permission: 'orders.view', tab: true },
+    { key: 'shipments', href: '/app/shipments', icon: 'truck', group: 'sales', permission: 'shipments.view' },
     { key: 'customers', href: '/app/customers', icon: 'users', group: 'sales', permission: 'customers.view' },
     { key: 'products', href: '/app/products', icon: 'box', group: 'catalog', permission: 'products.view', tab: true },
     { key: 'inventory', href: '/app/inventory', icon: 'stack', group: 'catalog', permission: 'inventory.view' },

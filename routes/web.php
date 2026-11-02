@@ -24,6 +24,7 @@ use App\Http\Controllers\Settings\StaffController;
 use App\Http\Controllers\Settings\WorkspaceSettingsController;
 use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\OrderController;
+use App\Http\Controllers\Sales\ShipmentController;
 use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -111,6 +112,11 @@ Route::middleware('auth')->group(function () {
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::post('orders/{order}/status', [OrderController::class, 'transition'])->name('orders.transition');
         Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+
+        Route::get('shipments', [ShipmentController::class, 'index'])->name('shipments.index');
+        Route::post('orders/{order}/ship', [ShipmentController::class, 'book'])->middleware('throttle:30,1')->name('shipments.book');
+        Route::post('shipments/{shipment}/refresh', [ShipmentController::class, 'refresh'])->middleware('throttle:60,1')->name('shipments.refresh');
+        Route::post('shipments/{shipment}/reconcile', [ShipmentController::class, 'reconcile'])->middleware('throttle:30,1')->name('shipments.reconcile');
 
         Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');

@@ -120,14 +120,22 @@ Loans (liability, not income; repayments split into principal and interest expen
 - Dashboard aggregates orders in PHP per request (fine for pilot volumes; move to SQL aggregates/summary tables at scale). Not yet run on MySQL.
 - Bangla strings for the new screens fall back to English. Touch long-press image reorder still pending.
 
-## Phase 3 — Courier integrations: IN PROGRESS (connection layer done; booking waits on endpoint specs)
+## Phase 3 — Courier integrations (Steadfast): DONE except webhooks; REDX waits on docs
 
-Done (Steadfast): Settings → Couriers screen; each tenant saves its own API key + secret key (encrypted at rest, masked in the UI, never returned to the browser, never in audit/logs); save → verify in one step; re-test, rotate (blank keeps stored value), disconnect; provider host is platform config only (tenants cannot override); self-imposed limit of 3 failed tests / 5 min so Steadfast's lockout (10 failures / 5 min → 60 min ban) is never triggered; status codes mapped to safe messages (401 bad keys, 403 inactive/KYC, 429 locked, 5xx). Verified live once with test keys: `GET /get_balance` → 200, body fields `status`, `current_balance`. 11 Pest tests (HTTP faked).
+Done: connection layer (encrypted keys, test, rotate, lockout guard), **booking from the order page**, shipments list, tracking, status refresh, safe recovery after timeouts, scheduled status sync.
 
-From the guide (confirmed): base `https://portal.packzy.com/api/v1`; headers `Api-Key`, `Secret-Key`; duplicate invoices are refused so a retry with the same invoice cannot double-book (=> use our order number as `invoice`, and `status_by_invoice` to reconcile `booking_unknown`); status answers cached 60 s (prefer webhook); no cancel endpoint, only return requests; statuses `pending, in_review, hold, *_approval_pending, delivered, partial_delivered, cancelled, exceptional, unknown` (the `_approval_pending` ones must not settle accounting); limits 1,000 req/min, 6,000 for booking.
+- **Send to courier:** button on a confirmed order (online-only, never auto-retried). Payload per the guide: `invoice` = our order number (the provider refuses duplicate invoices), name, phone normalised to 01XXXXXXXXX, address + area, `cod_amount`, optional note. The characters the provider strips (`{ } ; < > $`) are removed and lengths trimmed first.
+- **No duplicate parcels:** the shipment row is committed in state `booking` *before* the network call (in-flight lock), so a double click or a second tab cannot send twice. Timeout / 5xx / unreadable reply => `booking_unknown`: nothing is retried and booking is blocked until the user presses "Check status" (reconcile). A definite rejection (422, 401, 403, 429, or an error reported inside a 200) => `failed`, and a corrected retry reuses the same invoice.
+- **Reconcile (verified live):** an unknown invoice answers the same plain 401 "Unauthorized Access" as bad keys, so a 401 is ambiguous. "Not booked" is concluded only when `/get_balance` proves the keys valid AND at least 90 s have passed (the provider's cache window); otherwise the shipment stays unresolved.
+- **Status:** manual "Refresh status" plus `php artisan fc:courier-sync` every 15 minutes (scheduler) for unfinished parcels. The order moves to delivered only when the courier says `delivered` and the order is already `shipped`; `cancelled` => delivery failed; `*_approval_pending` is shown but never acted on (per the guide). Delivered is not COD paid: settlement stays under Accounting → COD.
+- Re-shipping after a cancelled parcel uses a new invoice (`ORD-000001-2`).
+- Tests: 30 Pest (payload, headers, double click, timeouts, ambiguity, sync, permissions, isolation, secrets) and 2 Playwright against a fake Steadfast server (`tests/e2e/fake-steadfast.mjs`). Totals: 223 PHP, 39 Vitest, 72 Playwright.
 
-Still needed before booking can be built (not guessed): the expanded entries for `POST /create_order` (full field list + response body, incl. the consignment id / tracking code field names), `GET /status_by_invoice/{invoice}` and `/status_by_cid/{id}` response bodies, `POST /create_return_request`, `/payments` shapes, and the **webhook** section (URL setup, signature/auth, payload, events). REDX: official docs and test credentials.
+### Assumptions to verify with the first real booking
+The guide excerpt does not show response bodies. Parsing expects `consignment.consignment_id`, `consignment.tracking_code` and `consignment.status` for create, and `delivery_status` for status lookups. Anything else is treated as `booking_unknown` / unreadable and never as a guessed success, so a different shape cannot create wrong data, but the first live booking may need the parser adjusted. One live read-only probe confirmed the 401 behaviour; no parcel was created during development.
 
-Security note: the test keys were pasted into chat; rotate them in the Steadfast dashboard (one named key per integration is supported) and treat them as exposed.
-
-## Next: Phase 3 booking, shipments, tracking and COD receivable once the specs above are available
+### Not built / open
+- **Webhooks** (need the guide's webhook section: URL registration, auth/signature, payload). Polling covers it meanwhile.
+- The guide has no cancel endpoint (only return requests). Return requests, pickup requests, bulk booking, balance display and label printing are not built.
+- Booking does not change the order status; the user still marks the order shipped (that posts revenue and COGS). If one Steadfast account is shared by several workspaces, identical order numbers would collide at the provider.
+- **REDX** needs official docs and test credentials.
